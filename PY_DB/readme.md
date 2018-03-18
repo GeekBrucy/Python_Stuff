@@ -13,6 +13,7 @@
 | DOUBLE | 8 byte | | |
 #### Date
 | Type | Size(byte) | Format |
+|------|------|------|
 | DATE | 3 | YYYY-MM-DD |
 | TIME | 3 | HH:MM:SS |
 | YEAR | 1 | YYYY |
@@ -20,6 +21,7 @@
 | TIMESTAMP | 4 | YYYYMMDDHHMMSS |
 #### String
 | Type | Size(byte) |
+|------|------|------|
 | CHAR | 0 ~ 255 |
 | VARCHAR | 0 ~ 65535 |
 | TINYBLOB | 0 ~ 255 |
@@ -32,7 +34,9 @@
 
 #### Handle NULL Value
 is null: return true if the field is null
+
 is not null
+
 **IMPORTANT:**Can NOT use = NULL to check, and any other value compare with NULL will always return false
 ### Installation (Ubuntu)
 ```shell
