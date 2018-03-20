@@ -1,7 +1,6 @@
 import sqlalchemy
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import sessionmaker
 
 engine = create_engine("mysql+pymysql://brucy:brucy_getGoodJob@localhost/db_playground", encoding='utf-8', echo=True) # echo=True will print out detailed process

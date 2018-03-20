@@ -276,8 +276,252 @@ drop index [indexName] on tableName;
 show index from tableName;
 ```
 
-
 ### SQLAlchemy - ORM
+#### ORM - Object Relationl Mapping
+#### How to use? - Insert Data
+1. Import a bunch of stuff
+```python
+import sqlalchemy
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+```
+2. Specify the database detail
+```python
+engine = create_engine("mysql+pymysql://username:password@localhost/dbName", encoding='utf-8', echo=True)
+# echo = True will print out the process detail
+
+# Different databse api has different sql string
+MySQL-Python
+    mysql+mysqldb://<user>:<password>@<host>[:<port>]/<dbname>
+   
+pymysql
+    mysql+pymysql://<username>:<password>@<host>/<dbname>[?<options>]
+   
+MySQL-Connector
+    mysql+mysqlconnector://<user>:<password>@<host>[:<port>]/<dbname>
+   
+cx_Oracle
+    oracle+cx_oracle://user:pass@host:port/dbname[?key=value&key=value...]
+```
+
+3. Generate orm base class
+```python
+Base = declarative_base()
+```
+4. Create table class
+```python
+class Product(Base):
+  __tablename__ = 'products' # table name
+  id = Column(Integer, primary_key = True)
+  name = Column(String(32))
+  price = Column(Integer)
+
+Base.metadata.create_all(engine) # create table schema
+```
+5. Create the session with database
+```python
+Session_class = sessionmaker(bind=engine) # sessionmaike() returns a class
+Session = Session_class() # create session instance
+```
+6. Create data object and insert into database
+```python
+prod_obj = Product(name='MacBook Pro 2017 15-inch', price='2799') # generate data obj
+Session.add(user_obj) # put data obj into session
+Session.commit() # Inert into databse
+```
+
+#### Query Data
+```python
+result = Session.query(Product).filter_by(name = "MacBook Pro 2017 15-inch").all() # here it returns a obj array
+print(result[0].name, result[0].price) # The index must be used
+```
+
+The above is very annoying, but if we modify the table class a little bit, life will be a lot easier
+```python
+class Product(Base):
+  __tablename__ = 'products' # table name
+  id = Column(Integer, primary_key = True)
+  name = Column(String(32))
+  price = Column(Integer)
+
+  def __repr__(self):
+    return "<Name: %s, Price: $%s>" %(self.name, self.price)
+# the __repr__ here allows to print the object in certain format
+```
+
+There are also a lot more way to query data
+```python
+# select * from table;
+result = Session.query(Product).filter_by().all()
+result = Session.query(Product.name,Product.price).all() 
+
+# select * from table where name like '%13-inch'
+result = Session.query(Product).filter(Product.name.like('%13-inch')).all()
+
+# select * from table where id > 1
+result = Session.query(Product).filter(Product.id > 1).all()
+
+# select * from table where id = 1
+result = Session.query(Product).filter(Product.id == 1).all()
+
+result = Session.query(Product).filter(Product.id == 1).first()
+
+# Multiple Conditions
+result = Session.query(Product).filter(Product.id>0).filter(Product.id<7).all()
+
+# Group
+from sqlalchemy import func
+print(Session.query(func.count(Product.name),Product.name).group_by(Product.name).all() )
+```
+#### Update
+The update is simple as following:
+```python
+result.name = "Dual Screen"
+Session.commit()
+```
+#### Rollback
+```python
+fake_product = Product(name = 'Androios', price = 300)
+Session.add(fake_product)
+print(Session.query(Product).filter(Product.name == 'Androios').all())
+Session.rollback()
+# The inserted data won't show
+print(Session.query(Product).filter(Product.name == 'Androios').all())
+
+```
+
+#### Foreign Key Constraint
+```python
+from sqlalchemy.orm import relationship # this is extra
+from sqlalchemy import ForeignKey # this is extra
+class Students(Base):
+  __tablename__ = 'student'
+  id = Column(Integer, primary_key = True)
+  name = Column(String(32), nullable = False)
+  register_date = Column(Date, nullable = False)
+
+  def __repr__(self):
+    return "<%s name: %s>" % (self.id, self.name)
+
+
+class StudyRecord(Base):
+  __tablename__ = 'study_record'
+  id = Column(Integer, primary_key = True)
+  day = Column(Integer, nullable = False)
+  status = Column(String(32))
+  stu_id = Column(Integer, ForeignKey('student.id'))
+
+  # relationship allows Students instance to access StudyRecord
+  student = relationship("Students", backref = "my_classes")
+  def __repr__(self):
+    return "<%s Day: %s Status: %s>" % (self.student.name, self.day, self.status)
+
+stu_obj = Session.query(Students).filter(Students.name == 'Brucy').first()
+print(stu_obj.my_classes) # just like this, it will print the __repr__ in StudyRecord
+```
+#### Multiple foreign key
+```python
+from sqlalchemy import Integer, ForeignKey, String, Column
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+
+class Customer(Base):
+    __tablename__ = 'customer'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+ 
+    billing_address_id = Column(Integer, ForeignKey("address.id"))
+    shipping_address_id = Column(Integer, ForeignKey("address.id"))
+
+    billing_address = relationship("Address", foreign_keys=[billing_address_id])
+    shipping_address = relationship("Address", foreign_keys=[shipping_address_id])
+ 
+class Address(Base):
+    __tablename__ = 'address'
+    id = Column(Integer, primary_key=True)
+    street = Column(String)
+    city = Column(String)
+    state = Column(String)
+```
+#### Many to Many Relationship
+```python
+from sqlalchemy import Table, Column, Integer,String,DATE, ForeignKey
+from sqlalchemy.orm import relationship
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+engine = create_engine("mysql+pymysql://brucy:brucy_getGoodJob@localhost/db_playground", encoding='utf-8')
+Base = declarative_base()
+
+custommer_m2m_product = Table('custommer_m2m_product', Base.metadata,
+                      Column('customer_id',Integer,ForeignKey('customer.id')),
+                      Column('product_id',Integer,ForeignKey('products.id')),
+                      )
+class Product(Base):
+  __tablename__ = 'products' # table name
+  id = Column(Integer, primary_key = True)
+  name = Column(String(32))
+  price = Column(Integer)
+  customer = relationship('Customer', secondary=custommer_m2m_product,backref='products' )
+
+  def __repr__(self):
+    return self.name
+
+class Customer(Base):
+  __tablename__ = 'customer'
+  id = Column(Integer, primary_key = True)
+  name = Column(String(32))
+
+  def __repr__(self):
+    return self.name
+
+Base.metadata.create_all(engine)
+
+Session_class = sessionmaker(bind=engine)
+s = Session_class()
+p1 = Product(name = "MBP 2017 15inch", price = 2799)
+p2 = Product(name = "MBP 2017 13inch", price = 1999)
+p3 = Product(name = "WASD Keyboard", price = 200)
+
+c1 = Customer(name = 'Brucy')
+c2 = Customer(name = 'Cindy')
+c3 = Customer(name = 'Bella')
+
+p1.customer = [c1, c2]
+p2.customer = [c2, c3]
+p3.customer = [c1, c2, c3]
+
+s.add_all([p1, p2, p3, c1, c2, c3])
+s.commit()
+s.close()
+```
+##### Query Many to Manay
+```python
+prod_obj = s.query(Product).first()
+print(prod_obj.customer)
+
+# .all() will return a list
+prod_obj = s.query(Product).all()
+print(prod_obj[0].customer)
+```
+##### Delete data from Many to Manay
+No need to care about custommer_m2m_product table
+```python
+# delete customer through product
+cust_obj =s.query(Customer).filter_by(name="Brucy").first()
+prod_obj = s.query(Product).filter_by(name="Product").first()
+prod_obj.customer.remove(cust_obj)
+s.commit()
+```
+```python
+# delete a customer record, the related data in product will be removed as well
+cust_obj =s.query(Customer).filter_by(name="Brucy").first()
+s.delete(cust_obj)
+print(author_obj.name , author_obj.books)
+s.commit()
+```
 
 ## TODO
 * Reading: http://www.cnblogs.com/wupeiqi/p/5713323.html
