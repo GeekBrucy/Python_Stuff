@@ -208,12 +208,12 @@ if class table is not created or the id in class table is invalid, then the inse
 
 #### Query multiple tables
 Suppose there are two tables:
-|A|B|
+| A | B |
 |------|------|
-|1|3|
-|2|4|
-|3|5|
-|4|6|
+| 1 | 3 |
+| 2 | 4 |
+| 3 | 5 |
+| 4 | 6 |
 ##### inner join: get matching data between two tables
 ```shell
 select * from A inner join B on A.a = B.b;
@@ -221,21 +221,21 @@ or
 select A.*, B.* from A,B where A.a =B.b;
 ```
 return:
-|A|B|
+| A | B |
 |------|------|
-|3|3|
-|4|4|
+| 3 | 3 |
+| 4 | 4 |
 ##### left join: get all left table records, even there is no matching record in th right
 ```shell
 select * from A left join B on A.a = B.b;
 ```
 return:
-|A|B|
+| A | B |
 |------|------|
-|1|NULL|
-|2|NULL|
-|3|3|
-|4|4|
+| 1 | NULL |
+| 2 | NULL |
+| 3 | 3 |
+| 4 | 4 |
 ##### right join: opposite to left join
 
 ### Transaction
