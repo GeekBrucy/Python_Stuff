@@ -21,7 +21,7 @@
 | TIMESTAMP | 4 | YYYYMMDDHHMMSS |
 #### String
 | Type | Size(byte) |
-|------|------|------|
+|------|------|
 | CHAR | 0 ~ 255 |
 | VARCHAR | 0 ~ 65535 |
 | TINYBLOB | 0 ~ 255 |
@@ -209,7 +209,7 @@ if class table is not created or the id in class table is invalid, then the inse
 #### Query multiple tables
 Suppose there are two tables:
 |A|B|
-|-|-|
+|------|------|
 |1|3|
 |2|4|
 |3|5|
@@ -222,7 +222,7 @@ select A.*, B.* from A,B where A.a =B.b;
 ```
 return:
 |A|B|
-|-|-|
+|------|------|
 |3|3|
 |4|4|
 ##### left join: get all left table records, even there is no matching record in th right
@@ -231,7 +231,7 @@ select * from A left join B on A.a = B.b;
 ```
 return:
 |A|B|
-|-|-|
+|------|------|
 |1|NULL|
 |2|NULL|
 |3|3|
